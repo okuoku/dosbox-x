@@ -12,7 +12,6 @@ AC_ARG_ENABLE(sdl2,     [  --enable-sdl2           Enable SDL 2.x],
 
   AH_TEMPLATE(C_SDL2,[Set to 1 to enable SDL 2.x support])
 
-  SDL2_CONFIG=no
   if test x$enable_sdl2enable = xyes ; then
     if test x$sdl2_exec_prefix != x ; then
       sdl2_args="$sdl2_args --exec-prefix=$sdl2_exec_prefix"
@@ -30,6 +29,10 @@ AC_ARG_ENABLE(sdl2,     [  --enable-sdl2           Enable SDL 2.x],
     if test -x vs/sdl2/linux-host/bin/sdl2-config ; then
       SDL2_CONFIG=vs/sdl2/linux-host/bin/sdl2-config
       PATH=vs/sdl2/linux-host/bin:$PATH
+    fi
+
+    if test x${SDL2_CONFIG+set} != xset ; then
+      SDL2_CONFIG=no
     fi
 
     manual_sdl2config="$SDL2_CONFIG"
