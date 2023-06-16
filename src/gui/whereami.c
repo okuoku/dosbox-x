@@ -806,6 +806,20 @@ int WAI_PREFIX(getModulePath)(char* out, int capacity, int* dirname_length)
   return length;
 }
 
+#elif defined(__EMSCRIPTEN__)
+
+WAI_NOINLINE WAI_FUNCSPEC
+int WAI_PREFIX(getExecutablePath)(char* out, int capacity, int* dirname_length)
+{
+    const char* result = "/dummy";
+    const int result_len = 6;
+    memcpy(out, result, result_len <= capacity ? result_len : capacity);
+    if(dirname_length){
+        *dirname_length = 0;
+    }
+    return result_len;
+}
+
 #else
 
 #error unsupported platform
