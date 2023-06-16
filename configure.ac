@@ -700,7 +700,9 @@ AC_CHECK_HEADER(slirp/libslirp.h,have_slirp_h=yes,)
 AC_CHECK_LIB(slirp, slirp_input, have_slirp_lib=yes, ,-lz)
 
 dnl LIBRARY TEST: libiconv
+if test x$enable_emscripten != xyes; then
 AC_CHECK_HEADER(iconv.h,have_iconv_h=yes,)
+fi
 dnl TEST: check if iconv uses const char
 AC_MSG_CHECKING([whether iconv uses const char**])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([
