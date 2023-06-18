@@ -195,10 +195,6 @@ typedef enum PROCESS_DPI_AWARENESS {
 } PROCESS_DPI_AWARENESS;
 #endif
 
-#if C_EMSCRIPTEN
-# include <emscripten.h>
-#endif
-
 #include "../src/libs/gui_tk/gui_tk.h"
 
 #ifdef __WIN32__
@@ -1346,10 +1342,7 @@ void PauseDOSBoxLoop(Bitu /*unused*/) {
             break;
         }
 
-#if C_EMSCRIPTEN
-        emscripten_sleep(0);
-        SDL_PollEvent(&event);
-#elif C_GAMELINK
+#if C_GAMELINK
         // Keep GameLink ticking over.
         SDL_Delay(100);
         OUTPUT_GAMELINK_Transfer();
@@ -2925,10 +2918,6 @@ void GFX_OpenGLRedrawScreen(void) {
 }
 
 void GFX_EndUpdate(const uint16_t *changedLines) {
-#if C_EMSCRIPTEN
-    emscripten_sleep(0);
-#endif
-
     /* don't present our output if 3Dfx is in OpenGL mode */
     if (sdl.desktop.prevent_fullscreen)
         return;
@@ -4546,12 +4535,7 @@ static void HandleMouseButton(SDL_MouseButtonEvent * button, SDL_MouseMotionEven
 
                 /* fall into another loop to process the menu */
                 while (runloop) {
-#if C_EMSCRIPTEN
-                    emscripten_sleep(0);
-                    if (!SDL_PollEvent(&event)) continue;
-#else
                     if (!SDL_WaitEvent(&event)) break;
-#endif
 
 #if defined(C_SDL2) && !defined(IGNORE_TOUCHSCREEN)
                     switch (event.type) {
@@ -5389,10 +5373,6 @@ void GFX_Events() {
 
     GFX_EventsMouse();
 
-#if C_EMSCRIPTEN
-    emscripten_sleep(0);
-#endif
-
     while (SDL_PollEvent(&event)) {
 #if defined(C_SDL2)
         /* SDL2 hack: There seems to be a problem where calling the SetWindowSize function,
@@ -5557,13 +5537,8 @@ void GFX_Events() {
 //                  }
 
                     while (paused) {
-#if C_EMSCRIPTEN
-                        emscripten_sleep(0);
-                        SDL_PollEvent(&ev);
-#else
                         // WaitEvent waits for an event rather than polling, so CPU usage drops to zero
                         SDL_WaitEvent(&ev);
-#endif
 
                         switch (ev.type) {
                         case SDL_QUIT:
@@ -5817,10 +5792,6 @@ void GFX_Events() {
 
     GFX_EventsMouse();
 
-#if C_EMSCRIPTEN
-    emscripten_sleep(0);
-#endif
-
     while (SDL_PollEvent(&event)) {
         /* DOSBox SVN revision 4176:4177: For Linux/X11, Xorg 1.20.1
          * will make spurious focus gain and loss events when locking the mouse in windowed mode.
@@ -6004,13 +5975,8 @@ void GFX_Events() {
 //                  }
 
                     while (paused) {
-#if C_EMSCRIPTEN
-                        emscripten_sleep(0);
-                        SDL_PollEvent(&ev);
-#else
                         // WaitEvent waits for an event rather than polling, so CPU usage drops to zero
                         SDL_WaitEvent(&ev);
-#endif
 
                         switch (ev.type) {
                         case SDL_QUIT: if (CheckQuit()) throw(0); break; // a bit redundant at linux at least as the active events gets before the quit event.

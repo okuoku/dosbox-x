@@ -4926,12 +4926,12 @@ void BIND_MappingEvents(void) {
     MAPPER_UpdateJoysticks();
 
 #if C_EMSCRIPTEN
-    emscripten_sleep(0);
+    //emscripten_sleep(0);
 #endif
 
     while (SDL_PollEvent(&event)) {
 #if C_EMSCRIPTEN
-        emscripten_sleep(0);
+        //emscripten_sleep(0);
 #endif
 
         switch (event.type) {
@@ -5361,7 +5361,7 @@ void MAPPER_RunInternal() {
 #endif
     while (!mapper.exit) {
 #if C_EMSCRIPTEN
-        emscripten_sleep(0);
+        //emscripten_sleep(0);
 #endif
 
         if (mapper.redraw) {

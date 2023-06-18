@@ -9543,14 +9543,6 @@ startfunction:
         //       a "BIOS setup" screen where all DOSBox-X configuration options can be
         //       modified, with the same look and feel of an old BIOS.
 
-#if C_EMSCRIPTEN
-        uint32_t lasttick=GetTicks();
-        while ((GetTicks()-lasttick)<1000) {
-            void CALLBACK_Idle(void);
-            CALLBACK_Idle();
-            emscripten_sleep(100);
-        }
-#else
         if (!fastbioslogo&&!bootguest&&!bootfast&&(bootvm||!use_quick_reboot)) {
             bool wait_for_user = false, bios_setup = false;
             int pos=1;
@@ -9741,7 +9733,6 @@ startfunction:
                 }
             }
         }
-#endif
 
         if (machine == MCH_PC98) {
             reg_eax = 0x4100;   // hide the graphics layer (PC-98)
