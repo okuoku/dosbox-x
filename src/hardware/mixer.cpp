@@ -1208,6 +1208,11 @@ void MIXER_Init() {
     spec.userdata=NULL;
     spec.samples=(Uint16)mixer.blocksize;
 
+#ifdef __EMSCRIPTEN__
+    mixer.nosound = true;
+    LOG(LOG_MISC,LOG_DEBUG)("FIXME: Forcibly disabled audio (okuoku)");
+#endif
+
     if (mixer.nosound) {
         LOG(LOG_MISC,LOG_DEBUG)("MIXER:No Sound Mode Selected.");
         TIMER_AddTickHandler(MIXER_Mix);
