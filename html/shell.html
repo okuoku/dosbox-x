@@ -1200,6 +1200,7 @@
     <div class="emscripten" id="status">Downloading...</div>
 
 <span id='controls'>
+  <span><input type="button" id="runbutton" onclick="callMain(Module.arguments);" value="Run"></span>
   <span><input type="checkbox" id="resize">Resize canvas</span>
   <span><input type="checkbox" id="pointerLock" checked>Lock/hide mouse pointer &nbsp;&nbsp;&nbsp;</span>
   <span><input type="button" value="Fullscreen" onclick="Module.requestFullscreen(document.getElementById('pointerLock').checked, 
@@ -1290,6 +1291,14 @@
         };
       };
     </script>
-    {{{ SCRIPT }}}
+
+    <!-- additional config -->
+    <script type="text/javascript">
+        Module["noInitialRun"] = true;
+        Module["arguments"] = ["-set", "machine=pc98", "-c", "mount d /data",
+                "-set", "mixer.nosound=true"];
+    </script>
+    <script type="text/javascript" src="data.js"></script>
+    <script type="text/javascript" src="dosbox-x.js"></script>
   </body>
 </html>
