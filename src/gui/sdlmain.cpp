@@ -7591,7 +7591,11 @@ std::wstring win32_prompt_folder(const char *default_folder) {
 void DISP2_Init(uint8_t color), DISP2_Shut();
 //extern void UI_Init(void);
 void grGlideShutdown(void);
+#ifdef __EMSCRIPTEN__
+static int mtproxy_main(int argc, char* argv[]) SDL_MAIN_NOEXCEPT {
+#else
 int main(int argc, char* argv[]) SDL_MAIN_NOEXCEPT {
+#endif
     CommandLine com_line(argc,argv);
     Config myconf(&com_line);
     bool saved_opt_test;
@@ -9773,3 +9777,104 @@ void POD_Load_Sdlmain( std::istream& stream )
 	READ_POD( &sdl.mouse.autolock, sdl.mouse.autolock );
 	READ_POD( &sdl.mouse.requestlock, sdl.mouse.requestlock );
 }
+
+#ifdef __EMSCRIPTEN__ // TEMP (okuoku)
+
+#include <emscripten.h>
+
+/* Multi thread proxies */
+struct mainthread_args{
+    char** argv;
+    int argc;
+};
+
+static pthread_cond_t cv;
+static pthread_mutex_t mtx;
+
+static SDL_AudioSpec* audiospec_desired;
+static SDL_AudioSpec* audiospec_obtained;
+static SDL_AudioSpec* audiospec_output;
+
+static void* mtproxy_callmain(void* p){
+    struct mainthread_args* map;
+    map = (struct mainthread_args*)p;
+
+    (void) mtproxy_main(map->argc, map->argv);
+
+    return 0;
+}
+
+/* Called from main thread */
+void mtproxy_mainloop(void){
+    int r;
+    /* Test if we had any message from the main thread */
+    (void) pthread_mutex_lock(&mtx);
+    if(audiospec_desired){
+        r = SDL_OpenAudio(audiospec_desired, audiospec_obtained);
+        audiospec_desired = 0;
+        if(! r){
+            audiospec_output = audiospec_obtained;
+            printf("OpenAudio success.\n");
+        }else{
+            printf("OpenAudio failed %d %s\n",r, SDL_GetError());
+        }
+        (void) pthread_cond_signal(&cv);
+    }
+    (void) pthread_mutex_unlock(&mtx);
+}
+
+int main(int argc, char** argv){
+    int r;
+    pthread_t worker;
+    struct mainthread_args ma;
+    ma.argc = argc;
+    ma.argv = argv;
+
+    /* Create condvar for communication */
+    (void) pthread_mutex_init(&mtx, 0);
+    (void) pthread_cond_init(&cv, 0);
+    audiospec_desired = 0;
+    audiospec_output = 0;
+
+    /* Register watcher loop */
+    emscripten_set_main_loop(mtproxy_mainloop, 0 /* Use rAF */, 0);
+
+    r = pthread_create(&worker, 0, mtproxy_callmain, &ma);
+    if(r != 0){
+        fprintf(stderr, "Couldn't create main thread %d\n", r);
+        abort();
+    }
+
+    return 0;
+}
+
+/* Called from worker thread */
+extern "C" int EMSCRIPTEN_MTPROXY_SDL_OpenAudio(SDL_AudioSpec* desired, SDL_AudioSpec* obtained){
+    int r;
+    printf("proxy called...\n");
+    if(! obtained){
+        printf("???\n");
+        abort();
+    }
+
+    (void) pthread_mutex_lock(&mtx);
+    for(;;){
+        if(audiospec_output){
+            if(audiospec_obtained != obtained){
+                // FIXME: We cannot catch mt issue by this
+                fprintf(stderr, "???\n");
+                abort();
+            }
+            r = 0;
+            printf("Return zero.\n");
+            break;
+        }
+        audiospec_desired = desired;
+        audiospec_obtained = obtained;
+        (void) pthread_cond_wait(&cv, &mtx);
+    }
+    (void) pthread_mutex_unlock(&mtx);
+    return r;
+}
+
+#endif

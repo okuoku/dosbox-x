@@ -45,6 +45,10 @@
 # define M_PI (3.141592654)
 #endif
 
+#ifdef __EMSCRIPTEN__
+#define SDL_OpenAudio EMSCRIPTEN_MTPROXY_SDL_OpenAudio
+#endif
+
 #include "SDL.h"
 #include "mem.h"
 #include "pic.h"
