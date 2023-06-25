@@ -65,7 +65,12 @@
 #include "programs.h"
 #include "midi.h"
 
+#ifdef __EMSCRIPTEN__
+//#define MIXER_SSIZE 4
+#define MIXER_SSIZE 8
+#else
 #define MIXER_SSIZE 4
+#endif
 #define MIXER_VOLSHIFT 13
 
 static INLINE int16_t MIXER_CLIP(Bits SAMP) {
@@ -897,7 +902,13 @@ static void SDLCALL MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
     int32_t volscale1 = (int32_t)(mixer.mastervol[0] * (1 << MIXER_VOLSHIFT));
     int32_t volscale2 = (int32_t)(mixer.mastervol[1] * (1 << MIXER_VOLSHIFT));
     Bitu need = (Bitu)len/MIXER_SSIZE;
+#ifdef __EMSCRIPTEN__
+    float *output = (float *)stream;
+    //const float MIXER_VOLNORM = powf(2, MIXER_VOLSHIFT + 2);
+    const float MIXER_VOLNORM = 118546432 * 2;
+#else
     int16_t *output = (int16_t*)stream;
+#endif
     int remains;
 
     if (mixer.mute) {
@@ -920,8 +931,13 @@ static void SDLCALL MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
         int32_t *in = &mixer.work[mixer.work_out][0];
         while (need > 0) {
             if (mixer.work_out == mixer.work_in) break;
+#ifdef __EMSCRIPTEN__
+            *output++ = (float)(*in++) / MIXER_VOLNORM;
+            *output++ = (float)(*in++) / MIXER_VOLNORM;
+#else
             *output++ = MIXER_CLIP((((int64_t)(*in++)) * (int64_t)volscale1) >> (MIXER_VOLSHIFT + MIXER_VOLSHIFT));
             *output++ = MIXER_CLIP((((int64_t)(*in++)) * (int64_t)volscale2) >> (MIXER_VOLSHIFT + MIXER_VOLSHIFT));
+#endif
             mixer.work_out++;
             if (mixer.work_out >= mixer.work_wrap) {
                 mixer.work_out = 0;
@@ -1206,7 +1222,11 @@ void MIXER_Init() {
     SDL_AudioSpec obtained;
 
     spec.freq=(int)mixer.freq;
+#ifdef __EMSCRIPTEN__
+    spec.format=AUDIO_F32SYS;
+#else
     spec.format=AUDIO_S16SYS;
+#endif
     spec.channels=2;
     spec.callback=MIXER_CallBack;
     spec.userdata=NULL;
